@@ -1,4 +1,4 @@
-From Tuto0 Require Import Loader.
+From Patmycoq Require Import Loader.
 
 (*** Printing messages ***)
 

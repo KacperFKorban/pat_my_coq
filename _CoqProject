@@ -1,7 +1,7 @@
 # Comments in _CoqProject start with # and end with newline
 
-# .v files in theories/ are modules whose name starts with "Tuto0"
--R theories/ Tuto0
+# .v files in theories/ are modules whose name starts with "Patmycoq"
+-R theories/ Patmycoq
 
 # META (an ocamlfind library specification) is necessary for rocq to find the plugin
 # in tuto0 we use rocq makefile's "-generate-meta-for-package"
