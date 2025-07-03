@@ -1,77 +1,39 @@
-(** See dev/doc/parsing.md for mlg doc *)
-
 DECLARE PLUGIN "rocq-plugin-patmycoq.plugin"
 
 {
 
-open Pp
 open Ltac_plugin
 
-let cat = CWarnings.create_category ~name:"plugin-tuto-cat" ()
+open Tacexpr
+open Constrexpr
+open Names
 
-let tuto_warn = CWarnings.create ~name:"name" ~category:cat
-    (fun () -> strbrk Patmycoq_main.message)
+open Procq.Constr
+
+open Pltac
 
 }
 
-(*** Printing messages ***)
+ARGUMENT EXTEND match_pattern
+  | [ cpattern(pc) ] -> { Term pc }
+  END
 
-(*
- * This defines a command that prints HelloWorld.
- * Note that Feedback.msg_notice can be used to print messages.
- *)
-VERNAC COMMAND EXTEND HelloWorld CLASSIFIED AS QUERY
-| [ "HelloWorld" ] -> { Feedback.msg_notice (strbrk Patmycoq_main.message) }
-END
+ARGUMENT EXTEND tac
+  | [ tactic(t) ] -> { t }
+  END
 
-(*
- * This is a tactic version of the same thing.
- *)
-TACTIC EXTEND hello_world_tactic
-| [ "hello_world" ] ->
-  { let () = Feedback.msg_notice (str Patmycoq_main.message) in
-    Tacticals.tclIDTAC }
-END
-
-(*** Printing warnings ***)
-
-(*
- * This defines a command that prints HelloWorld as a warning.
- * tuto_warn is defined at the top-level, before the command runs,
- * which is standard.
- *)
-VERNAC COMMAND EXTEND HelloWarning CLASSIFIED AS QUERY
-| [ "HelloWarning" ] ->
-   {
-     tuto_warn ()
-   }
-END
-
-(*
- * This is a tactic version of the same thing.
- *)
-TACTIC EXTEND hello_warning_tactic
-| [ "hello_warning" ] ->
-   {
-     let () = tuto_warn () in
-     Tacticals.tclIDTAC
-   }
-END
-
-(*** Printing errors ***)
-
-(*
- * This defines a command that prints HelloWorld inside of an error.
- * Note that CErrors.user_err can be used to raise errors to the user.
- *)
-VERNAC COMMAND EXTEND HelloError CLASSIFIED AS QUERY
-| [ "HelloError" ] -> { CErrors.user_err (str Patmycoq_main.message) }
-END
-
-(*
- * This is a tactic version of the same thing.
- *)
-TACTIC EXTEND hello_error_tactic
-| [ "hello_error" ] ->
-  { CErrors.user_err (str Patmycoq_main.message) }
+(* pat `forall x: nat, _` (apply _ in H3) *)
+(* for now we have to use exactly HHH in the tactic *)
+TACTIC EXTEND pat_tactical
+| [ "pat" "`" match_pattern(p) "`" tac(t) ] ->
+  { let nm = CAst.make (Name.Name (Id.of_string "pat")) in
+    let tac: Tacexpr.raw_tactic_expr = t in
+    let hyp = Hyp (nm, p) in
+    (* TODO(kπ) vvv plug nm for Name.Anonymous *)
+    (* let t_plugged = _ in *)
+    (* let tac_expr = CAst.make (TacArg (TacGeneric t)) in *)
+    let match_ctx_rules = [Pat ([hyp], Term (CAst.make (CHole None)), tac)] in
+    let match_lexpr = CAst.make (TacMatchGoal (Once, false, match_ctx_rules)) in
+    Tacinterp.interp match_lexpr
+  }
 END

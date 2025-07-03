@@ -1,7 +1,8 @@
 (library
  (name patmycoq_plugin)
  (public_name rocq-runtime.plugins.tutorial.p0)
- (libraries rocq-runtime.plugins.ltac))
+ (libraries rocq-runtime.plugins.ltac)
+ (libraries rocq-runtime.vernac))
 
 (rule
  (targets g_patmycoq.ml)
